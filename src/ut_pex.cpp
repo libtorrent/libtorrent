@@ -113,7 +113,7 @@ namespace libtorrent { namespace
 				detail::write_endpoint(*i, pla_out);
 				// no supported flags to set yet
 				// 0x01 - peer supports encryption
-				detail::write_uint8(0, plf_out);
+				detail::write_uint8(0x01, plf_out);
 
 				if (--num_peers == 0) break;
 			}

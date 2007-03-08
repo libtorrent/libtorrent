@@ -371,6 +371,14 @@ namespace libtorrent
 				- m_write_pos;
 		}
 
+#ifndef TORRENT_DISABLE_ENCRYPTION
+		buffer::interval wr_recv_buffer()
+		{
+			return buffer::interval(&m_recv_buffer[0]
+				, &m_recv_buffer[0] + m_recv_pos);
+		}
+#endif
+		
 		buffer::const_interval receive_buffer() const
 		{
 			return buffer::const_interval(&m_recv_buffer[0]
@@ -378,13 +386,17 @@ namespace libtorrent
 		}
 
 		void cut_receive_buffer(int size, int packet_size);
+		void cut_receive_buffer(int size)
+		{
+			cut_receive_buffer(size, m_packet_size);
+		}
 
 		void reset_recv_buffer(int packet_size);
 		int packet_size() const { return m_packet_size; }
 
 		bool packet_finished() const
 		{
-			assert(m_recv_pos <= m_packet_size);
+// 			assert(m_recv_pos <= m_packet_size); // no longer valid.
 			return m_packet_size <= m_recv_pos;
 		}
 

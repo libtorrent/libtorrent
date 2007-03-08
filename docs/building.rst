@@ -227,6 +227,16 @@ Build features:
 |                        |   logging of the DHT protocol traffic.             |
 |                        | * ``off`` - build without DHT support.             |
 +------------------------+----------------------------------------------------+
+| ``zlib``               | * ``system`` - links against the zlib supplied     |
+|                        |   with your operating system.                      |
+|                        | * ``shipped`` - links against the zlib bundled     |
+|                        |   with the libtorrent package.                     |
++------------------------+----------------------------------------------------+
+| ``pe-support``         | * ``on`` - turns on support for encrypted          |
+|                        |   connections. requires openssl (libcrypto)        |
+|                        | * ``off`` - turns off support for encrypted        |
+|                        |   connections. openssl is not linked in.           |
++------------------------+----------------------------------------------------+
 | ``link``               | * ``static`` - builds libtorrent as a static       |
 |                        |   library (.a / .lib)                              |
 |                        | * ``shared`` - builds libtorrent as a shared       |
@@ -264,7 +274,8 @@ To build all possible variants of libtorrent (good for testing when making
 sure all build variants will actually compile), you can invoke this command::
 
 	bjam debug release link=shared link=static logging=verbose logging=default \
-	logging=none dht-support=on dht-support=logging dht-support=off
+	logging=none dht-support=on dht-support=logging dht-support=off pe-support=on \
+	pe-support=off zlib=shipped zlib=system
 
 building with autotools
 -----------------------

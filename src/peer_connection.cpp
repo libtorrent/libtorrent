@@ -289,6 +289,9 @@ namespace libtorrent
 
 	void peer_connection::announce_piece(int index)
 	{
+		// dont announce during handshake
+		if (in_handshake()) return;
+		
 		// optimization, don't send have messages
 		// to peers that already have the piece
 		if (has_piece(index)) return;
@@ -1486,9 +1489,12 @@ namespace libtorrent
 		INVARIANT_CHECK;
 
 		assert(packet_size > 0);
+		// assert (size >= 0);
 		assert((int)m_recv_buffer.size() >= size);
 		// TODO: replace with memmov
-		std::copy(m_recv_buffer.begin() + size, m_recv_buffer.begin() + m_recv_pos, m_recv_buffer.begin());
+
+ 		if (size != 0)
+			std::copy(m_recv_buffer.begin() + size, m_recv_buffer.begin() + m_recv_pos, m_recv_buffer.begin());
 
 		assert(m_recv_pos >= size);
 		m_recv_pos -= size;
@@ -1519,8 +1525,6 @@ namespace libtorrent
 			(*i)->tick();
 		}
 #endif
-
-		m_statistics.second_tick(tick_interval);
 
 		if (!t->valid_metadata()) return;
 
@@ -1584,6 +1588,8 @@ namespace libtorrent
 				send_block_requests();
 			}
 		}
+
+		m_statistics.second_tick(tick_interval);
 
 		// If the client sends more data
 		// we send it data faster, otherwise, slower.
@@ -1759,7 +1765,7 @@ namespace libtorrent
 		if (m_writing) return;
 		
 		shared_ptr<torrent> t = m_torrent.lock();
-		
+
 		if (m_bandwidth_limit[upload_channel].quota_left() == 0
 			&& (!m_send_buffer[m_current_send_buffer].empty()
 				|| !m_send_buffer[(m_current_send_buffer + 1) & 1].empty())
@@ -1782,7 +1788,7 @@ namespace libtorrent
 			}
 			return;
 		}
-		
+
 		if (!can_write()) return;
 
 		assert(!m_writing);
@@ -1846,11 +1852,10 @@ namespace libtorrent
 		int max_receive = std::min(
 			m_bandwidth_limit[download_channel].quota_left()
 			, m_packet_size - m_recv_pos);
-		assert(max_receive > 0);
+ 		assert(max_receive > 0);
 
 		assert(m_recv_pos >= 0);
 		assert(m_packet_size > 0);
-		assert(max_receive > 0);
 
 		assert(can_read());
 		m_socket->async_read_some(asio::buffer(&m_recv_buffer[m_recv_pos]
@@ -1871,7 +1876,7 @@ namespace libtorrent
 		if (int(m_recv_buffer.size()) < m_packet_size)
 			m_recv_buffer.resize(m_packet_size);
 	}
-	
+
 	void peer_connection::send_buffer(char const* begin, char const* end)
 	{
 		std::vector<char>& buf = m_send_buffer[m_current_send_buffer];
@@ -1918,10 +1923,11 @@ namespace libtorrent
 		// correct the dl quota usage, if not all of the buffer was actually read
 		m_bandwidth_limit[download_channel].use_quota(bytes_transferred);
 
+		
 		if (error)
 		{
 #ifdef TORRENT_VERBOSE_LOGGING
-			(*m_logger) << "**ERROR**: " << error.message() << "\n";
+			(*m_logger) << "**ERROR**: " << error.message() << "[in peer_connection::on_receive_data]\n";
 #endif
 			on_receive(error, bytes_transferred);
 			throw std::runtime_error(error.message());
@@ -1974,7 +1980,7 @@ namespace libtorrent
 		// all exceptions should derive from std::exception
 		assert(false);
 		session_impl::mutex_t::scoped_lock l(m_ses.m_mutex);
-		m_ses.connection_failed(m_socket, remote(), "connection failed for unkown reason");
+		m_ses.connection_failed(m_socket, remote(), "connection failed for unknown reason");
 	}
 
 	bool peer_connection::can_write() const
@@ -2092,10 +2098,11 @@ namespace libtorrent
 		m_bandwidth_limit[upload_channel].use_quota(bytes_transferred);
 		m_write_pos += bytes_transferred;
 
+		
 		if (error)
 		{
 #ifdef TORRENT_VERBOSE_LOGGING
-			(*m_logger) << "**ERROR**: " << error.message() << "\n";
+			(*m_logger) << "**ERROR**: " << error.message() << " [in peer_connection::on_send_data]\n";
 #endif
 			throw std::runtime_error(error.message());
 		}
@@ -2129,7 +2136,7 @@ namespace libtorrent
 		// all exceptions should derive from std::exception
 		assert(false);
 		session_impl::mutex_t::scoped_lock l(m_ses.m_mutex);
-		m_ses.connection_failed(m_socket, remote(), "connection failed for unkown reason");
+		m_ses.connection_failed(m_socket, remote(), "connection failed for unknown reason");
 	}
 
 
@@ -2255,8 +2262,18 @@ namespace libtorrent
 		d = second_clock::universal_time() - m_last_sent;
 		if (d.total_seconds() < m_timeout / 2) return;
 
+		
 		if (m_connecting) return;
+		if (in_handshake()) return;
 
+#ifdef TORRENT_VERBOSE_LOGGING
+		using namespace	boost::posix_time;
+		(*m_logger) << " last_sent : " << to_simple_string(m_last_sent)
+					<< " m_timeout : " << m_timeout << "\n"; 
+		(*m_logger) << to_simple_string(second_clock::universal_time())
+					<< " ==> KEEPALIVE\n";
+#endif
+		
 		write_keepalive();
 	}
 

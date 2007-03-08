@@ -29,6 +29,10 @@ feature.compose <dht-support>on : ;
 feature.compose <dht-support>off : <define>TORRENT_DISABLE_DHT ;
 feature.compose <dht-support>logging : <define>TORRENT_DHT_VERBOSE_LOGGING ;
 
+feature pe-support : on off : composite propagated symmetric ;
+feature.compose <pe-support>on : ;
+feature.compose <pe-support>off : <define>TORRENT_DISABLE_ENCRYPTION ;
+
 SOURCES =
 	allocate_resources.cpp
 	alert.cpp
@@ -105,7 +109,6 @@ if [ os.name ] = NT
 	DEFINES += _WIN32_WINNT ;
 }	
 
-
 project torrent
 
 	: requirements
@@ -156,13 +159,23 @@ project torrent
 
 	;
 
+lib libz : : <search>/usr/lib <name>z ;
+lib crypto : : <search>/usr/lib <name>crypto ;
+
+feature zlib : system shipped : composite ;
+feature.compose <zlib>system : ;
+feature.compose <zlib>shipped : ;
+
 lib torrent
 	:
 	src/$(SOURCES)
-	zlib/$(ZLIB_SOURCES)
 	$(LIBS)
 	:
 	<dht-support>on:<source>src/$(KADEMLIA_SOURCES)
 	<dht-support>logging:<source>src/$(KADEMLIA_SOURCES)
+	<zlib>shipped:<source>zlib/$(ZLIB_SOURCES)
+	<zlib>system:<source>libz
+	<pe-support>on:<source>src/pe_crypto.cpp
+	<pe-support>on:<source>crypto
 	;
 
