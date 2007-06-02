@@ -1004,7 +1004,7 @@ int main(int ac, char* av[])
 						out << to_string(i->piece_index, 4) << ": [";
 						for (int j = 0; j < i->blocks_in_piece; ++j)
 						{
-							int index = peer_index(i->peer[j], peers);
+							int index = peer_index(i->blocks[j].peer, peers);
 							char str[] = "+";
 							bool currently_downloading = false;
 							if (index >= 0)
@@ -1017,8 +1017,9 @@ int main(int ac, char* av[])
 #ifdef ANSI_TERMINAL_COLORS
 							if (currently_downloading)
 								out << esc("33;7") << str << esc("0");
-							else if (i->finished_blocks[j]) out << esc("32;7") << str << esc("0");
-							else if (i->requested_blocks[j]) out << str;
+							else if (i->blocks[j].state == block_info::finished) out << esc("32;7") << str << esc("0");
+							else if (i->blocks[j].state == block_info::writing) out << esc("35;7") << str << esc("0");
+							else if (i->blocks[j].state == block_info::requested) out << str;
 							else out << " ";
 #else
 							if (i->finished_blocks[j]) out << "#";

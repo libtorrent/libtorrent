@@ -11,11 +11,19 @@
 using boost::filesystem::remove_all;
 using boost::filesystem::create_directory;
 
-void sleep(int msec)
+void sleep(int millisec)
 {
 	boost::xtime xt;
 	boost::xtime_get(&xt, boost::TIME_UTC);
-	xt.nsec += msec * 1000000;
+	boost::uint64_t nanosec = (millisec % 1000) * 1000000 + xt.nsec;
+	int sec = millisec / 1000;
+	if (nanosec > 1000000000)
+	{
+		nanosec -= 1000000000;
+		sec++;
+	}
+	xt.nsec = nanosec;
+	xt.sec += sec;
 	boost::thread::sleep(xt);
 }
 

@@ -2097,12 +2097,13 @@ namespace libtorrent { namespace detail
 					for (int j = 0; j < num_bitmask_bytes; ++j)
 					{
 						unsigned char bits = bitmask[j];
-						for (int k = 0; k < 8; ++k)
+						int num_bits = std::min(num_blocks_per_piece - j*8, 8);
+						for (int k = 0; k < num_bits; ++k)
 						{
 							const int bit = j * 8 + k;
 							if (bits & (1 << k))
 							{
-								p.info[bit].finished = true;
+								p.info[bit].state = piece_picker::block_info::state_finished;
 								++p.finished;
 							}
 						}

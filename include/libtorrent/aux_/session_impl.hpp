@@ -82,6 +82,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/lsd.hpp"
 #include "libtorrent/socket_type.hpp"
 #include "libtorrent/connection_queue.hpp"
+#include "libtorrent/disk_io_thread.hpp"
 
 namespace libtorrent
 {
@@ -328,6 +329,9 @@ namespace libtorrent
 			// since they will still have references to it
 			// when they are destructed.
 			file_pool m_files;
+
+			// handles disk io requests asynchronously
+			disk_io_thread m_disk_thread;
 
 			// this is a list of half-open tcp connections
 			// (only outgoing connections)
