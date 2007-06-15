@@ -595,6 +595,66 @@ namespace libtorrent
 		m_request_queue.clear();
 	}
 
+	bool match_request(peer_request const& r, piece_block const& b, int block_size)
+	{
+		if (b.piece_index != r.piece) return false;
+		if (b.block_index != r.start / block_size) return false;
+		if (r.start % block_size != 0) return false;
+		return true;
+	}
+
+	// -----------------------------
+	// -------- REJECT PIECE -------
+	// -----------------------------
+
+	void peer_connection::incoming_reject_request(peer_request const& r)
+	{
+		INVARIANT_CHECK;
+
+		boost::shared_ptr<torrent> t = m_torrent.lock();
+		assert(t);
+
+		std::deque<piece_block>::iterator i = std::find_if(
+			m_download_queue.begin(), m_download_queue.end()
+			, bind(match_request, boost::cref(r), _1, t->block_size()));
+	
+#ifdef TORRENT_VERBOSE_LOGGING
+			(*m_logger) << time_now_string()
+				<< " <== REJECT_PIECE [ piece: " << r.piece << " | s: " << r.start << " | l: " << r.length << " ]\n";
+#endif
+
+		piece_block b(-1, 0);
+		if (i != m_download_queue.end())
+		{
+	  		b = *i;
+			m_download_queue.erase(i);
+		}
+		else
+		{
+			i = std::find_if(m_request_queue.begin(), m_request_queue.end()
+				, bind(match_request, boost::cref(r), _1, t->block_size()));
+
+			if (i != m_request_queue.end())
+			{
+				b = *i;
+				m_request_queue.erase(i);
+			}
+		}
+		
+		if (b.piece_index != -1 && !t->is_seed())
+		{
+			piece_picker& p = t->picker();
+			p.abort_download(b);
+		}
+#ifdef TORRENT_VERBOSE_LOGGING
+		else
+		{
+			(*m_logger) << time_now_string()
+				<< " *** PIECE NOT IN REQUEST QUEUE\n";
+		}
+#endif
+	}
+	
 	// -----------------------------
 	// ---------- UNCHOKE ----------
 	// -----------------------------
@@ -932,6 +992,7 @@ namespace libtorrent
 				"t: " << (int)t->torrent_file().piece_size(r.piece) << " | "
 				"n: " << t->torrent_file().num_pieces() << " ]\n";
 #endif
+			write_reject_request(r);
 			return;
 		}
 
@@ -972,6 +1033,8 @@ namespace libtorrent
 				"n: " << t->torrent_file().num_pieces() << " | "
 				"h: " << t->have_piece(r.piece) << " ]\n";
 #endif
+
+			write_reject_request(r);
 
 			++m_num_invalid_requests;
 

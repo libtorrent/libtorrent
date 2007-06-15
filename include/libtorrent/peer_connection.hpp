@@ -190,9 +190,9 @@ namespace libtorrent
 		void set_pid(const peer_id& pid) { m_peer_id = pid; }
 		bool has_piece(int i) const;
 
-		const std::deque<piece_block>& download_queue() const;
-		const std::deque<piece_block>& request_queue() const;
-		const std::deque<peer_request>& upload_queue() const;
+		std::deque<piece_block> const& download_queue() const;
+		std::deque<piece_block> const& request_queue() const;
+		std::deque<peer_request> const& upload_queue() const;
 
 		bool is_interesting() const { return m_interesting; }
 		bool is_choked() const { return m_choked; }
@@ -299,6 +299,7 @@ namespace libtorrent
 		void incoming_piece_fragment();
 		void incoming_cancel(peer_request const& r);
 		void incoming_dht_port(int listen_port);
+		void incoming_reject_request(peer_request const& r);
 
 		// the following functions appends messages
 		// to the send buffer
@@ -376,6 +377,8 @@ namespace libtorrent
 		virtual void write_keepalive() = 0;
 		virtual void write_piece(peer_request const& r, char const* buffer) = 0;
 		
+		virtual void write_reject_request(peer_request const& r) = 0;
+
 		virtual void on_connected() = 0;
 		virtual void on_tick() {}
 	
