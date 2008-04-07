@@ -155,6 +155,15 @@ The ``session`` class has the following synopsis::
 			, int> const& node);
 		void add_dht_router(std::pair<std::string
 			, int> const& node);
+
+		void start_lsd();
+		void stop_lsd();
+
+		void start_upnp();
+		void stop_upnp();
+
+		void start_natpmp();
+		void stop_natpmp();
 	};
 
 Once it's created, the session object will spawn the main thread that will do all the work.
@@ -727,6 +736,47 @@ for bootstrapping, to keep the load off them.
 
 An example routing node that you could typically add is
 ``router.bittorrent.com``.
+
+
+start_lsd() stop_lsd()
+----------------------
+
+	::
+
+		void start_lsd();
+		void stop_lsd();
+
+Starts and stops Local Service Discovery. This service will broadcast
+the infohashes of all the non-private torrents on the local network to
+look for peers on the same swarm within multicast reach.
+
+It is turned off by default.
+
+start_upnp() stop_upnp()
+------------------------
+
+	::
+	
+		void start_upnp();
+		void stop_upnp();
+
+Starts and stops the UPnP service. When started, the listen port and the DHT
+port are attempted to be forwarded on local UPnP router devices.
+
+It is off by default.
+
+start_natpmp() stop_natpmp()
+----------------------------
+
+	::
+		
+		void start_natpmp();
+		void stop_natpmp();
+
+Starts and stops the NAT-PMP service. When started, the listen port and the DHT
+port are attempted to be forwarded on the router through NAT-PMP.
+
+It is off by default.
 
 
 entry
@@ -3039,21 +3089,6 @@ Now we just need to know how to retrieve information from the entry_.
 
 If ``bdecode()`` encounters invalid encoded data in the range given to it
 it will throw invalid_encoding_.
-
-
-supports_sparse_files()
------------------------
-
-	::
-
-		bool supports_sparse_files(boost::filesystem::path const&);
-
-The path is expected to be the path to the directory where you will want to
-store sparse files. The return value is true if the file system supports
-sparse files or if it supports automatic zero filling of files. The main
-characteristics that is tested by this function is not the storage aspects
-of sparse files, but rather the support for seeking passed end of file and
-write data there, with expected behavior.
 
 
 alerts
