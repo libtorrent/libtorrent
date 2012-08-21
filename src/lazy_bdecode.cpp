@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/lazy_entry.hpp"
 #include "libtorrent/escape_string.hpp"
 #include <cstring>
+#include <stdio.h>
 
 #if TORRENT_USE_IOSTREAM
 #include <iostream>
