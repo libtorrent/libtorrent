@@ -30,6 +30,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include <stdio.h>
+
 #include "libtorrent/pch.hpp"
 
 #include "libtorrent/file_storage.hpp"
@@ -287,7 +289,7 @@ namespace libtorrent
 				i->offset = off;
 				i->file_base = 0;
 				char name[10];
-				std::sprintf(name, "%d", padding_file);
+				sprintf(name, "%d", padding_file);
 				i->path = *(i+1)->path.begin();
 				i->path /= "_____padding_file_";
 				i->path /= name;
