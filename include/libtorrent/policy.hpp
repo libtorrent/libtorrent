@@ -35,6 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <set>
+#include <deque>
 
 #include "libtorrent/peer.hpp"
 #include "libtorrent/piece_picker.hpp"
