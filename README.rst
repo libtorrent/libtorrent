@@ -1,1 +1,1 @@
-libtorrent development lives at https://github.org/arvidn/libtorrent for now
+libtorrent development lives at https://github.com/arvidn/libtorrent for now
